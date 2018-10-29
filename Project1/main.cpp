@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "Circuit.h"
 #include "CommandLineArgumentParser.h"
 
 int main( int argc, char* argv[] )
@@ -19,7 +20,11 @@ int main( int argc, char* argv[] )
 		exit( EXIT_FAILURE );
 	}
 
-	printf("%p\n", inputFile );
+	Circuit circuit( inputFile );
+
+	circuit.printGraph();
+
+//	printf("%p\n", inputFile );
 
 	exit( EXIT_SUCCESS );
 }

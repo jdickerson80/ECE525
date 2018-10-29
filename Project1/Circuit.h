@@ -1,8 +1,11 @@
 #ifndef CIRCUIT_H
 #define CIRCUIT_H
 
+#include <stdio.h>
 #include <list>
+#include <vector>
 
+#define MAX_NODES ( 25000 )
 class Circuit
 {
 public:
@@ -23,37 +26,58 @@ public:
 		};
 	};
 
-	typedef std::list< int > LIST;
+	typedef std::list< int > IntList;
 
 	struct Node
 	{
 		NodeTypes::Enum type;
 		int fanoutNumber;
-		int faninNuber;
+		int faninNumber;
 		int output;
-		LIST fanIn;
-		LIST fanOut;
+		IntList fanIn;
+		IntList fanOut;
 
 		Node();
+
+//		Node( NodeTypes::Enum type );
 	};
 
 	struct Cell
 	{
-		LIST* nets;
-		int BLK;
+		IntList nets;
+		int block;
 
 		Cell();
 	};
 
 	struct Net
 	{
-		LIST* cells;
-		int Nb,Na;
+		IntList cells;
+		int nA;
+		int nB;
 
 		Net();
 	};
 
-	Circuit();
+	Circuit( FILE* inputFile );
+
+
+	typedef Node Graph[ MAX_NODES ];
+	typedef std::vector< Cell > CellVector;
+	typedef std::vector< Net >  NetVector;
+
+	void printGraph() const;
+private:
+	CellVector _cellVector;
+	IntList _inputVector;
+	Graph _graph;
+	int _maxNodeID;
+	NetVector _netVector;
+	IntList _outputVector;
+
+	int readCircuit( FILE* inputFile );
+
 };
+
 
 #endif // CIRCUIT_H
