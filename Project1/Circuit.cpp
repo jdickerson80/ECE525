@@ -299,19 +299,3 @@ int Circuit::readCircuit( FILE* inputFile )
 	fclose(inputFile);
 	return max_node_id;
 }
-
-void Circuit::handleNetAddition( int graphPosition )
-{
-	Net tempNet;
-	tempNet.cells.push_back( graphPosition );
-
-	Circuit::IntList::const_iterator it = _graph[ graphPosition ].fanOut.begin();
-
-	while ( it != _graph[ graphPosition ].fanOut.end() )
-	{
-		tempNet.cells.push_back( (*it) );
-		++it;
-	}
-
-	_netVector.push_back( tempNet );
-}

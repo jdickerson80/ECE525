@@ -91,8 +91,6 @@ private:
 	IntList _outputVector;
 
 	int readCircuit( FILE* inputFile );
-
-	void handleNetAddition( int graphPosition );
 };
 
 
