@@ -2,6 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+void printList( const Circuit::IntList& list )
+{
+	Circuit::IntList::const_iterator it = list.begin();
+
+	while ( it != list.end() )
+	{
+		printf( "%i ", (*it) );
+		++it;
+	}
+}
+
 Circuit::Node::Node()
 	: type( NodeTypes::EMPTY )
 	, fanoutNumber( 0 )
@@ -12,17 +23,6 @@ Circuit::Node::Node()
 {
 
 }
-
-//Circuit::Node::Node( NodeTypes::Enum type )
-//	: type( type )
-//	, fanoutNumber( 0 )
-//	, faninNumber( 0 )
-//	, output( 0 )
-//	, fanIn()
-//	, fanOut()
-//{
-
-//}
 
 Circuit::Cell::Cell()
 	: block( 0 )
@@ -38,21 +38,72 @@ Circuit::Net::Net()
 }
 
 Circuit::Circuit( FILE* inputFile )
-	: _maxNodeID( 0 )
+	: _numberOfCells( 0 )
+	, _maxNodeID( 0 )
 {
 	_maxNodeID = readCircuit( inputFile );
 }
 
-void printList( const Circuit::IntList& list )
+void Circuit::populateCellandNetVectors()
 {
-	Circuit::IntList::const_iterator it = list.begin();
+	size_t netVectorNumber;
+	Net tempNet;
+	Node* tempNode;
+	Circuit::IntList::const_iterator nodeIterator;
+	Circuit::IntList::const_iterator nodeEnd;
+	size_t aBucketCellThreshold =  ( _maxNodeID / 2 ) - 1;
+	printf("%lu\n", aBucketCellThreshold );
 
-	while ( it != list.end() )
+	for ( size_t i = 0; i <= _maxNodeID; ++i )
 	{
-		printf( "%i ", (*it) );
-		++it;
+		tempNode = &_graph[ i ];
+
+		if ( tempNode->type == NodeTypes::EMPTY || tempNode->fanOut.empty() )
+		{
+			continue;
+		}
+
+		tempNet.nA = 0;
+		tempNet.nB = 0;
+		tempNet.cells.clear();
+		netVectorNumber = _netVector.size() + 1;
+		tempNet.cells.push_back( i );
+
+		i > aBucketCellThreshold ? ++tempNet.nB : ++tempNet.nA;
+
+		_cellVector[ i ].nets.push_back( netVectorNumber );
+
+		nodeIterator = tempNode->fanOut.begin();
+		nodeEnd = tempNode->fanOut.end();
+
+		while ( nodeIterator != nodeEnd )
+		{
+			tempNet.cells.push_back( (*nodeIterator) );
+			(*nodeIterator) > aBucketCellThreshold ? ++tempNet.nB : ++tempNet.nA;
+			_cellVector[ (*nodeIterator) ].nets.push_back( netVectorNumber );
+			++nodeIterator;
+		}
+
+		_netVector.push_back( tempNet );
 	}
 }
+
+void Circuit::printCellArray() const
+{
+	printf("Cell\tBlock\tNets\n");
+	for ( size_t i = 0; i <= _maxNodeID; ++i )
+	{
+		if ( _cellVector[ i ].nets.empty() )
+		{
+			continue;
+		}
+
+		printf("%lu\t%i\t", i, _cellVector[ i ].block );
+		printList( _cellVector[ i ].nets );
+		printf("\n");
+	}
+}
+
 
 void Circuit::printGraph() const
 {
@@ -72,7 +123,38 @@ void Circuit::printGraph() const
 	}
 }
 
-void charcat(char *s, char b)
+void Circuit::printNetArray() const
+{
+	printf("Net\tNa\tNb\tCells\n");
+	for ( size_t i = 0; i < _netVector.size(); ++i )
+	{
+		printf("%lu\t%i\t%i\t", i + 1, _netVector[ i ].nA, _netVector[ i ].nB );
+		printList( _netVector[ i ].cells );
+		printf("\n");
+	}
+}
+
+size_t Circuit::maxNodeID() const
+{
+	return _maxNodeID;
+}
+
+const Circuit::Graph& Circuit::graph() const
+{
+	return _graph;
+}
+
+const Circuit::CellVector& Circuit::cellVector() const
+{
+	return _cellVector;
+}
+
+const Circuit::NetVector& Circuit::netVector() const
+{
+	return _netVector;
+}
+
+void charcat( char *s, char b )
 {
 	while(*s!='\0')
 	{
@@ -134,6 +216,7 @@ int Circuit::readCircuit( FILE* inputFile )
 			nodeID = atoi( nodeIDBuffer );
 			_graph[ nodeID ].type=assign_type( nodeTypeBuffer );
 			_inputVector.push_back( nodeID );
+			++_numberOfCells;
 		}
 
 		/*-------------------------Feeding the Outputs------------------------------*/
@@ -206,6 +289,7 @@ int Circuit::readCircuit( FILE* inputFile )
 				_graph[node_count].fanoutNumber = _graph[node_count].fanOut.size();
 			}
 
+			++_numberOfCells;
 		}/*------------------End of feeding gates----------------------------*/
 
 		bzero(linebuffer, MAX_LINE);
@@ -214,4 +298,20 @@ int Circuit::readCircuit( FILE* inputFile )
 	}/*end while*/
 	fclose(inputFile);
 	return max_node_id;
+}
+
+void Circuit::handleNetAddition( int graphPosition )
+{
+	Net tempNet;
+	tempNet.cells.push_back( graphPosition );
+
+	Circuit::IntList::const_iterator it = _graph[ graphPosition ].fanOut.begin();
+
+	while ( it != _graph[ graphPosition ].fanOut.end() )
+	{
+		tempNet.cells.push_back( (*it) );
+		++it;
+	}
+
+	_netVector.push_back( tempNet );
 }

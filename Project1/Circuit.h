@@ -26,7 +26,7 @@ public:
 		};
 	};
 
-	typedef std::list< int > IntList;
+	typedef std::list< unsigned int > IntList;
 
 	struct Node
 	{
@@ -38,14 +38,12 @@ public:
 		IntList fanOut;
 
 		Node();
-
-//		Node( NodeTypes::Enum type );
 	};
 
 	struct Cell
 	{
-		IntList nets;
 		int block;
+		IntList nets;
 
 		Cell();
 	};
@@ -59,24 +57,42 @@ public:
 		Net();
 	};
 
-	Circuit( FILE* inputFile );
-
-
 	typedef Node Graph[ MAX_NODES ];
-	typedef std::vector< Cell > CellVector;
+	typedef Cell CellVector[ MAX_NODES ];
 	typedef std::vector< Net >  NetVector;
 
+public:
+
+	Circuit( FILE* inputFile );
+
+	void populateCellandNetVectors();
+
+	void printCellArray() const;
+
 	void printGraph() const;
+
+	void printNetArray() const;
+
+	size_t maxNodeID() const;
+
+	const Graph& graph() const;
+
+	const CellVector& cellVector() const;
+
+	const NetVector& netVector() const;
 private:
+
+	size_t _numberOfCells;
 	CellVector _cellVector;
 	IntList _inputVector;
 	Graph _graph;
-	int _maxNodeID;
+	size_t _maxNodeID;
 	NetVector _netVector;
 	IntList _outputVector;
 
 	int readCircuit( FILE* inputFile );
 
+	void handleNetAddition( int graphPosition );
 };
 
 

@@ -22,7 +22,18 @@ int main( int argc, char* argv[] )
 
 	Circuit circuit( inputFile );
 
+	circuit.populateCellandNetVectors();
+
 	circuit.printGraph();
+
+	printf( "------------------------\n" );
+
+	circuit.printCellArray();
+
+	printf( "------------------------\n" );
+
+	circuit.printNetArray();
+
 
 //	printf("%p\n", inputFile );
 
