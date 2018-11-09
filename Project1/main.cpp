@@ -49,8 +49,7 @@ int main( int argc, char* argv[] )
 
 	fMAlgorithm.calculateCost();
 
-	printf("Cost is %i\n", fMAlgorithm.cost() );
-//	printf("%p\n", inputFile );
+	printf("Cost = %i\n", fMAlgorithm.cost() );
 
 	exit( EXIT_SUCCESS );
 }

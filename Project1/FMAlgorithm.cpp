@@ -72,23 +72,40 @@ void FMAlgorithm::calculateGains()
 	IntList::const_iterator nodeEnd;
 	Net* tempNet;
 	size_t maxNodeID = _adjacencyList.maxNodeID();
+	int from;
+	int to;
+	int fn;
+	int tn;
 
 	for ( size_t i = 0; i <= maxNodeID; ++i )
 	{
+		if ( _cellVector[ i ].block == EmptyBlock || _cellVector[ i ].lock )
+		{
+			continue;
+		}
 		nodeIterator = _cellVector[ i ].nets.begin();
 		nodeEnd = _cellVector[ i ].nets.end();
+		_cellVector[ i ].gain = 0;
+		from = _cellVector[ i ].block;
+		to = ~_cellVector[ i ].block & 0x1;
+
+//		printf("blk %i f %i, t %i\n", _cellVector[ i ].block, from, to );
 
 		while ( nodeIterator != nodeEnd )
 		{
-			tempNet = &_netVector[ (*nodeIterator) ];
-			if ( tempNet->nA == 0 || tempNet->nB == 0 )
-			{
-				--_cellVector[ i ].gain;
-			}
-			else
+			tempNet = &_netVector[ (*nodeIterator) - 1 ];
+			fn = from == 0 ? tempNet->nA : tempNet->nB;
+			tn = to   == 0 ? tempNet->nA : tempNet->nB;
+//			printf("\tnet %i, a %i, b %i, fn %i, tn %i\n", (*nodeIterator), tempNet->nA, tempNet->nB, fn, tn );
+			if ( fn == 1 )
 			{
 				++_cellVector[ i ].gain;
 			}
+			if ( tn == 0 )
+			{
+				--_cellVector[ i ].gain;
+			}
+
 			++nodeIterator;
 		}
 	}
