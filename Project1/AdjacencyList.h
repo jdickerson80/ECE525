@@ -16,15 +16,8 @@ public:
 	{
 		enum Enum
 		{
-			Input	= 1,
-			And,
-			Nand,
-			Or,
-			Nor,
-			Not,
-			Output,
-			Buffer,
-			EMPTY
+			Input	= 1, And, Nand, Or,	Nor,
+			Not, Output, Buffer, EMPTY
 		};
 	};
 
