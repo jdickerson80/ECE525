@@ -1,8 +1,9 @@
 #include <stdio.h>
 
-#include "Circuit.h"
+#include "FMAlgorithm.h"
 #include "CommandLineArgumentParser.h"
 
+#define PrintSeparator ( { printf( "------------------------\n" ); })
 int main( int argc, char* argv[] )
 {
 	if ( argc < 2 )
@@ -12,7 +13,7 @@ int main( int argc, char* argv[] )
 	}
 
 	FILE* inputFile	 = NULL;
-	FILE* outputFile = NULL;
+	FILE* outputFile = stdout;
 
 	if ( CommandLineArgumentParser::parseCommandLineArgument( argc, argv, &inputFile, &outputFile ) )
 	{
@@ -20,21 +21,35 @@ int main( int argc, char* argv[] )
 		exit( EXIT_FAILURE );
 	}
 
-	Circuit circuit( inputFile );
+	FMAlgorithm fMAlgorithm( inputFile );
+	fclose( inputFile );
 
-	circuit.populateCellandNetVectors();
+	fMAlgorithm.populateCellandNetVectors();
+	fMAlgorithm.calculateGains();
 
-	circuit.printGraph();
+	fMAlgorithm.printGraph();
 
-	printf( "------------------------\n" );
+	PrintSeparator;
 
-	circuit.printCellArray();
+	fMAlgorithm.printCellArray();
 
-	printf( "------------------------\n" );
+	PrintSeparator;
 
-	circuit.printNetArray();
+	fMAlgorithm.printNetArray();
 
+	PrintSeparator;
 
+	fMAlgorithm.printPartitions();
+	fMAlgorithm.sortParitions();
+	PrintSeparator;
+
+	fMAlgorithm.printPartitions();
+
+	PrintSeparator;
+
+	fMAlgorithm.calculateCost();
+
+	printf("Cost is %i\n", fMAlgorithm.cost() );
 //	printf("%p\n", inputFile );
 
 	exit( EXIT_SUCCESS );

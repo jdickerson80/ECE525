@@ -9,7 +9,7 @@ static char usage[] = \
 	"Usage: FMAlgorithm [-h] [-i] [-o]\n" \
 				"-h, --help\t\tprint this help message\n" \
 				"-i, --InputFiles\tBenchmark file to read in\n"
-				"-o, --OutputFiles\tBenchmark file to put results\n";
+				"-o, --OutputFiles\tFile to put results\n";
 
 // setup the long options
 static struct option longOptions[] =
@@ -19,8 +19,6 @@ static struct option longOptions[] =
 	{ "help",			no_argument,		0, CommandLineArgumentParser::UsageArguments::Help },
 	{ 0,				0,					0, 0  }
 };
-
-
 
 int CommandLineArgumentParser::parseCommandLineArgument( int argc, char*const* argv, FILE** inputFile, FILE** outputFile )
 {
@@ -38,7 +36,6 @@ int CommandLineArgumentParser::parseCommandLineArgument( int argc, char*const* a
 		case UsageArguments::OutputFile:
 
 			break;
-
 		}
 	}
 
@@ -47,5 +44,5 @@ int CommandLineArgumentParser::parseCommandLineArgument( int argc, char*const* a
 
 void CommandLineArgumentParser::printUsage()
 {
-	printf("%s", usage );
+	perror( usage );
 }
