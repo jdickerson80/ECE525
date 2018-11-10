@@ -3,6 +3,20 @@
 #include <string.h>
 #include <stdlib.h>
 
+namespace {
+
+void printList( const IntList& list )
+{
+	IntList::const_iterator it = list.begin();
+
+	while ( it != list.end() )
+	{
+		printf( "%i ", (*it) );
+		++it;
+	}
+}
+
+
 AdjacencyList::NodeTypes::Enum assign_type(char *type)
 {
 	if(strcmp(type,"INPUT")==0)			return AdjacencyList::NodeTypes::Input;
@@ -25,6 +39,7 @@ void charcat( char *s, char b )
 	}
 	*s=b;
 }
+}
 
 AdjacencyList::Node::Node()
 	: type( NodeTypes::EMPTY )
@@ -38,7 +53,8 @@ AdjacencyList::Node::Node()
 }
 
 AdjacencyList::AdjacencyList( FILE* inputFile )
-	: _maxNodeID( 0 )
+	: _numberOfCells( 0 )
+	, _maxNodeID( 0 )
 {
 #define NODE_BUFF_SIZE ( 10 )
 #define MAX_LINE ( 100 )
@@ -160,9 +176,28 @@ AdjacencyList::AdjacencyList( FILE* inputFile )
 	}/*end while*/
 }
 
-const AdjacencyList::Graph &AdjacencyList::graph() const
+const AdjacencyList::Graph& AdjacencyList::graph() const
 {
 	return _graph;
+}
+
+void AdjacencyList::printGraph() const
+{
+	printf("NODE\tGATE\tIn #\tOut #\tFanin\tFanout\n");
+
+	for ( unsigned int i = 0; i <= _maxNodeID; ++i )
+	{
+		if ( _graph[ i ].type != AdjacencyList::NodeTypes::EMPTY )
+		{
+			const AdjacencyList::Node& node = _graph[ i ];
+			printf("%d\t%d\t%d\t%d\t", i, node.type, node.faninNumber, _graph[ i ].fanoutNumber);
+			printList( node.fanIn );
+			printf("\t");
+			printList( node.fanOut );
+			printf("\n");
+		}
+	}
+	printf("MaxNodeID=%lu\nTOT_CELLS=%lu\n", _maxNodeID, _numberOfCells );
 }
 
 const IntList& AdjacencyList::inputVector() const
