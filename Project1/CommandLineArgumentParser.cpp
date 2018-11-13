@@ -23,7 +23,7 @@ int CommandLineArgumentParser::parseCommandLineArgument( int argc, char*const* a
 	int opt;
 
 	// parse the user's arguments
-	while ( ( opt = getopt_long( argc, argv, "hi:o:", longOptions, NULL ) ) != -1 )
+	while ( ( opt = getopt_long( argc, argv, "hi:", longOptions, NULL ) ) != -1 )
 	{
 		switch ( opt )
 		{
