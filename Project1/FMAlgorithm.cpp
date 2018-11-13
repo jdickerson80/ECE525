@@ -351,8 +351,8 @@ void FMAlgorithm::calculateCost()
 	// loop through the net
 	for ( size_t i = 0; i < size; ++i )
 	{
-		// if number of nets in a or b is zero
-		if ( _netVector[ i ].nA == 0 || _netVector[ i ].nB == 0 )
+		// if number of nets in a is not 0 and b is not zero
+		if ( _netVector[ i ].nA != 0 && _netVector[ i ].nB != 0 )
 		{
 			// increment the cost
 			++_cost;
