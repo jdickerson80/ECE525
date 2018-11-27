@@ -7,6 +7,11 @@
 
 namespace {
 
+/**
+ * @brief bubbleSort
+ * @param partition
+ * @todo change sorting algorithm to one with less complexity
+ */
 void bubbleSort( FMAlgorithm::Partition& partition )
 {
 	FMAlgorithm::Cell* temp;
@@ -34,16 +39,6 @@ void bubbleSort( FMAlgorithm::Partition& partition )
 	}
 }
 
-void printList( const IntList& list )
-{
-	IntList::const_iterator it = list.begin();
-
-	while ( it != list.end() )
-	{
-		printf( "%i ", (*it) );
-		++it;
-	}
-}
 }
 
 FMAlgorithm::Cell::Cell()
@@ -82,10 +77,9 @@ void FMAlgorithm::execute()
 	printCellArray();
 	PrintSeparator;
 
-	printNetArray();
-	PrintSeparator;
-
 	calculateInitialGains();
+
+	printNetArray();
 	PrintSeparator;
 
 	printPartitions();
@@ -139,6 +133,9 @@ void FMAlgorithm::calculateInitialGains()
 			// get the corresponding net from the net list
 			tempNet = &_netVector[ (*nodeIterator) - 1 ];
 
+			// calculate the Na and Nb values
+			calculateNetPartition( tempNet );
+
 			// calculate f(n) and t(n)
 			fn = from == 0 ? tempNet->nA : tempNet->nB;
 			tn = to   == 0 ? tempNet->nA : tempNet->nB;
@@ -178,8 +175,6 @@ void FMAlgorithm::populateCellandNetVectors()
 			? ( _adjacencyList->numberOfCells() / 2 )
 			: ( _adjacencyList->numberOfCells() / 2 ) + 1;
 
-	printf("thresh %lu\n", aBucketCellThreshold );
-
 	const AdjacencyList::Graph& graph = _adjacencyList->graph();
 
 	// loop through the adjacency list
@@ -195,6 +190,7 @@ void FMAlgorithm::populateCellandNetVectors()
 			continue;
 		}
 
+		// increment the counter
 		++partitionCounter;
 
 		// clear the temp net
@@ -206,7 +202,7 @@ void FMAlgorithm::populateCellandNetVectors()
 		netVectorNumber = _netVector.size() + 1;
 		tempNet.cells.push_back( i );
 
-		// position > a's threshold
+		// partitionCounter > a's threshold
 		if ( partitionCounter > aBucketCellThreshold )
 		{
 			// put it on block "b"
@@ -215,7 +211,7 @@ void FMAlgorithm::populateCellandNetVectors()
 			// put it in the b partition
 			_partitionB.push_back( &_cellVector[ i ] );
 		}
-		else
+		else // partitionCounter <= a's threshold
 		{
 			// put it on block "a"
 			_cellVector[ i ].block = 0;
@@ -227,6 +223,7 @@ void FMAlgorithm::populateCellandNetVectors()
 		// get the cell number
 		_cellVector[ i ].cellNumber = i;
 
+		// if this is an output, do not add it to the net vector
 		if ( tempNode->fanOut.empty() )
 		{
 			continue;
@@ -257,6 +254,35 @@ void FMAlgorithm::populateCellandNetVectors()
 	}
 }
 
+void FMAlgorithm::calculateNetPartition(Net *net )
+{
+	IntList::const_iterator nodeIterator = net->cells.begin();
+	IntList::const_iterator nodeEnd = net->cells.end();
+
+	// if nA and nB is empty
+	if ( net->nA == 0 && net->nB == 0 )
+	{
+		// loop through the nets
+		while ( nodeIterator != nodeEnd )
+		{
+			// if the cell is in block A
+			if ( _cellVector[ (*nodeIterator) ].block == 0 )
+			{
+				// increment the nA
+				++net->nA;
+			}
+			else // cell is in block B
+			{
+				// increment the nB
+				++net->nB;
+			}
+
+			// increment the iterator
+			++nodeIterator;
+		}
+	}
+}
+
 void FMAlgorithm::printCellArray() const
 {
 	printf("Gain\tBlock\tCell\tLock\tNets\n");
@@ -280,7 +306,7 @@ void FMAlgorithm::printCellArray() const
 
 void FMAlgorithm::printNetArray() const
 {
-	printf("Na\tNb\tCell\tNet\n");
+	printf("Na\tNb\tNet\tCell\n");
 	for ( size_t i = 0; i < _netVector.size(); ++i )
 	{
 		printf("%i\t%i\t%lu\t", _netVector[ i ].nA, _netVector[ i ].nB, i + 1 );
@@ -294,7 +320,7 @@ void FMAlgorithm::printPartitions() const
 	printf("PA\tGain\t\n");
 	for ( size_t i = 0; i < _partitionA.size(); ++i )
 	{
-		printf("%i\t%i\t\n", _partitionA[ i ]->cellNumber, _partitionA[ i ]->gain );
+		printf("%lu\t%i\t\n", _partitionA[ i ]->cellNumber, _partitionA[ i ]->gain );
 	}
 
 	PrintSeparator;
@@ -302,7 +328,7 @@ void FMAlgorithm::printPartitions() const
 	printf("PB\tGain\t\n");
 	for ( size_t i = 0; i < _partitionB.size(); ++i )
 	{
-		printf("%i\t%i\t\n", _partitionB[ i ]->cellNumber, _partitionB[ i ]->gain );
+		printf("%lu\t%i\t\n", _partitionB[ i ]->cellNumber, _partitionB[ i ]->gain );
 	}
 }
 
@@ -344,135 +370,3 @@ const FMAlgorithm::NetVector& FMAlgorithm::netVector() const
 {
 	return _netVector;
 }
-
-
-/*
-
-void FMAlgorithm::populateCellandNetVectors()
-{
-	// init the necessary variables
-	size_t netVectorNumber;
-	Net tempNet;
-	const AdjacencyList::Node* tempNode;
-	IntList::const_iterator nodeIterator;
-	IntList::const_iterator nodeEnd;
-	size_t maxNodeID = _adjacencyList->numberOfCells();
-	size_t aBucketCellThreshold =  ( maxNodeID / 2 ) % 2 == 0 ? ( maxNodeID / 2 ) : ( maxNodeID / 2 ) + 1;
-	printf("thresh %lu\n", aBucketCellThreshold );
-	size_t partitionCounter = 0;
-	const AdjacencyList::Graph& graph = _adjacencyList->graph();
-
-	// loop through the adjacency list
-	for ( size_t i = 0; i <= maxNodeID; ++i )
-	{
-		// get the node
-		tempNode = &graph[ i ];
-
-		// if the position is empty
-		if ( tempNode->type == AdjacencyList::NodeTypes::EMPTY )
-		{
-			// next
-			continue;
-		}
-
-		++partitionCounter;
-
-		// if this is an output
-		if ( tempNode->fanOut.empty() )
-		{
-			// cell number is the loop position
-			_cellVector[ i ].cellNumber = i;
-
-			// position > a's threshold
-			if ( partitionCounter > aBucketCellThreshold )
-			{
-				// put it in b
-				_partitionB.push_back( &_cellVector[ i ] );
-			}
-			else
-			{
-				// put it in a
-				_partitionA.push_back( &_cellVector[ i ] );
-			}
-
-			// this is an output, so no need to do the rest
-			continue;
-		}
-
-		// clear the temp net
-		tempNet.nA = 0;
-		tempNet.nB = 0;
-		tempNet.cells.clear();
-
-		// get the net vector number
-		netVectorNumber = _netVector.size() + 1;
-		tempNet.cells.push_back( i );
-
-		// position > a's threshold
-		if ( partitionCounter > aBucketCellThreshold )
-		{
-			// increment b
-			++tempNet.nB;
-
-			// put it on block "b"
-			_cellVector[ i ].block = 1;
-
-			// put it in the b partition
-			_partitionB.push_back( &_cellVector[ i ] );
-		}
-		else
-		{
-			// increment a
-			++tempNet.nA;
-
-			// put it on block "a"
-			_cellVector[ i ].block = 0;
-
-			// put it in the a partition
-			_partitionA.push_back( &_cellVector[ i ] );
-		}
-
-		// get the cell number
-		_cellVector[ i ].cellNumber = i;
-
-		// add it to the net
-		_cellVector[ i ].nets.push_back( netVectorNumber );
-
-		// get the beginning and end of the fan outs
-		nodeIterator = tempNode->fanOut.begin();
-		nodeEnd = tempNode->fanOut.end();
-
-		// loop through them
-		while ( nodeIterator != nodeEnd )
-		{
-			// add it to the cells
-			tempNet.cells.push_back( (*nodeIterator) );
-
-			// add it to the cell vector's net
-			_cellVector[ (*nodeIterator) ].nets.push_back( netVectorNumber );
-
-			// put it in the proper block
-			if ( (*nodeIterator) > aBucketCellThreshold )
-			{
-				if ( _cellVector[ (*nodeIterator) ].block == EmptyBlock )
-				{
-					++tempNet.nB;
-					_cellVector[ (*nodeIterator)].block = 1;
-				}
-			}
-			else
-			{
-				if ( _cellVector[ (*nodeIterator) ].block == EmptyBlock )
-				{
-					++tempNet.nA;
-					_cellVector[ (*nodeIterator) ].block = 0;
-				}
-			}
-			++nodeIterator;
-		}
-
-		// add the temp net to the net vector
-		_netVector.push_back( tempNet );
-	}
-}
- */

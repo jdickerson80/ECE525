@@ -1,12 +1,10 @@
 #ifndef ADJACENCYLIST_H
 #define ADJACENCYLIST_H
 
-#include <list>
 #include <stdio.h>
+#include "IntegerList.h"
 
 #define MAX_NODES ( 25000 )
-
-typedef std::list< unsigned int > IntList;
 
 /**
  * @brief The AdjacencyList class represents the circuit
@@ -76,20 +74,20 @@ public:
 	 * @brief numberOfCells in the graph
 	 * @return number of cells in the graph
 	 */
-	size_t numberOfCells() const;
+	std::size_t numberOfCells() const;
 
 	/**
 	 * @brief maxNodeID getter
 	 * @return the last node's id
 	 */
-	size_t maxNodeID() const;
+	std::size_t maxNodeID() const;
 
 private:
 
 	Graph _graph;
 	IntList _inputVector;
-	size_t _numberOfCells;
-	size_t _maxNodeID;
+	std::size_t _numberOfCells;
+	std::size_t _maxNodeID;
 	IntList _outputVector;
 };
 

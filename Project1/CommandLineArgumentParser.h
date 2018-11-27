@@ -1,8 +1,7 @@
 #ifndef COMMANDLINEARGUMENTPARSER_H
 #define COMMANDLINEARGUMENTPARSER_H
 
-#include <string>
-#include <vector>
+#include <stdio.h>
 
 /**
  * @brief	The CommandLineArgumentParser class parses the command line arguments

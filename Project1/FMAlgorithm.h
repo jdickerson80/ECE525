@@ -1,12 +1,11 @@
 #ifndef FMALGORITHM_H
 #define FMALGORITHM_H
 
-#include <list>
-#include <stdio.h>
 #include <vector>
-#define MAX_NODES ( 25000 )
 
-typedef std::list< unsigned int > IntList;
+#include "IntegerList.h"
+
+#define MAX_NODES ( 25000 )
 
 class AdjacencyList;
 
@@ -28,8 +27,8 @@ public:
 		int block;
 		int gain;
 		int lock;
-		int cellNumber;
 		IntList nets;
+		std::size_t cellNumber;
 
 		Cell();
 	};
@@ -95,7 +94,7 @@ public:
 	 * @brief maxNodeID getter
 	 * @return max node ID
 	 */
-	size_t maxNodeID() const;
+	std::size_t maxNodeID() const;
 
 	/**
 	 * @brief cellVector getter
@@ -140,6 +139,12 @@ private:
 	 * @todo break into smaller methods
 	 */
 	inline void populateCellandNetVectors();
+
+	/**
+	 * @brief calculateNetPartition calculates the number of nets in partition a and b for a given net
+	 * @param net to check
+	 */
+	inline void calculateNetPartition( Net* net );
 };
 
 #endif // FMALGORITHM_H

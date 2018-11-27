@@ -6,7 +6,7 @@
 using namespace std;
 
 static char usage[] = \
-	"Usage: FMAlgorithm [-h] [-i] [-o]\n" \
+	"Usage: FMAlgorithm [-h] [-i]\n" \
 				"-h, --help\t\tprint this help message\n" \
 				"-i, --InputFiles\tBenchmark file to read in\n";
 

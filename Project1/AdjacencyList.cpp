@@ -5,18 +5,6 @@
 
 namespace {
 
-void printList( const IntList& list )
-{
-	IntList::const_iterator it = list.begin();
-
-	while ( it != list.end() )
-	{
-		printf( "%i ", (*it) );
-		++it;
-	}
-}
-
-
 AdjacencyList::NodeTypes::Enum assign_type(char *type)
 {
 	if(strcmp(type,"INPUT")==0)			return AdjacencyList::NodeTypes::Input;
@@ -29,7 +17,6 @@ AdjacencyList::NodeTypes::Enum assign_type(char *type)
 	else if(strcmp(type,"BUFF")==0)		return AdjacencyList::NodeTypes::Buffer;
 	else								return AdjacencyList::NodeTypes::EMPTY;
 }
-
 
 void charcat( char *s, char b )
 {
@@ -60,10 +47,11 @@ AdjacencyList::AdjacencyList( FILE* inputFile )
 #define MAX_LINE ( 100 )
 	char  nodeTypeBuffer[NODE_BUFF_SIZE],nodeIDBuffer[NODE_BUFF_SIZE],linebuffer[MAX_LINE];
 	int   i,node_no,node_count=0;
-	int nodeID;
+	size_t nodeID;
+	char* warningRemoval;
 
 	do
-		fgets(linebuffer,MAX_LINE,inputFile);
+		warningRemoval = fgets(linebuffer,MAX_LINE,inputFile);
 	while(linebuffer[0]=='#');
 
 	while(!feof(inputFile))
@@ -73,7 +61,7 @@ AdjacencyList::AdjacencyList( FILE* inputFile )
 
 
 		if(linebuffer[0]=='#' || linebuffer[0]=='\n')
-			fgets(linebuffer,MAX_LINE,inputFile);
+			warningRemoval = fgets(linebuffer,MAX_LINE,inputFile);
 
 		/*------------------------Feeding the Inputs------------------------------*/
 
@@ -171,7 +159,8 @@ AdjacencyList::AdjacencyList( FILE* inputFile )
 		}/*------------------End of feeding gates----------------------------*/
 
 		bzero(linebuffer, MAX_LINE);
-		fgets(linebuffer,MAX_LINE,inputFile);
+		warningRemoval = fgets(linebuffer,MAX_LINE,inputFile);
+		warningRemoval = warningRemoval;
 
 	}/*end while*/
 }
