@@ -1,6 +1,7 @@
 #include "FMAlgorithm.h"
 
 #include "AdjacencyList.h"
+#include "GainBucket.h"
 
 #define EmptyBlock ( 10 )
 #define PrintSeparator ( { printf( "------------------------\n" ); })
@@ -12,32 +13,32 @@ namespace {
  * @param partition
  * @todo change sorting algorithm to one with less complexity
  */
-void bubbleSort( FMAlgorithm::Partition& partition )
-{
-	FMAlgorithm::Cell* temp;
-	size_t size = partition.size();
+//void bubbleSort( FMAlgorithm::Partition& partition )
+//{
+//	FMAlgorithm::Cell* temp;
+//	size_t size = partition.size();
 
-	// loop through the whole array
-	for ( size_t x = 0; x < size; x++ )
-	{
-		// loop through array size - 1
-		for ( size_t y = 0; y < size - 1; y++ )
-		{
-			// if the current element is less than the next element
-			if ( partition[ y ]->gain < partition[ y + 1 ]->gain )
-			{
-				// store the next element
-				temp = partition[ y + 1 ];
+//	// loop through the whole array
+//	for ( size_t x = 0; x < size; x++ )
+//	{
+//		// loop through array size - 1
+//		for ( size_t y = 0; y < size - 1; y++ )
+//		{
+//			// if the current element is less than the next element
+//			if ( partition[ y ]->gain < partition[ y + 1 ]->gain )
+//			{
+//				// store the next element
+//				temp = partition[ y + 1 ];
 
-				// the next element equals the current element
-				partition[ y + 1 ] = partition[ y ];
+//				// the next element equals the current element
+//				partition[ y + 1 ] = partition[ y ];
 
-				// the current element equals the old next element
-				partition[ y ] = temp;
-			}
-		}
-	}
-}
+//				// the current element equals the old next element
+//				partition[ y ] = temp;
+//			}
+//		}
+//	}
+//}
 
 }
 
@@ -58,13 +59,23 @@ FMAlgorithm::Net::Net()
 }
 
 FMAlgorithm::FMAlgorithm( const AdjacencyList* const adjacencyList, bool shouldExecute /* = false */ )
-	: _adjacencyList( adjacencyList )
+	: _aBucket( new GainBucket() )
+	, _bBucket( new GainBucket() )
+	, _adjacencyList( adjacencyList )
 	, _cost( 0 )
+	, _partitionASize( 0 )
+	, _partitionBSize( 0 )
 {
 	if ( shouldExecute )
 	{
 		execute();
 	}
+}
+
+FMAlgorithm::~FMAlgorithm()
+{
+	delete _aBucket;
+	delete _bBucket;
 }
 
 void FMAlgorithm::execute()
@@ -74,10 +85,10 @@ void FMAlgorithm::execute()
 //	_adjacencyList->printGraph();
 //	PrintSeparator;
 
-	printCellArray();
-	PrintSeparator;
 
 	calculateInitialGains();
+	printCellArray();
+	PrintSeparator;
 
 	printNetArray();
 	PrintSeparator;
@@ -90,6 +101,9 @@ void FMAlgorithm::execute()
 
 	printPartitions();
 	PrintSeparator;
+
+	populateGainBuckets();
+	calculatePartitions();
 
 	calculateCost();
 	printf("Cost = %i\n", cost() );
@@ -157,6 +171,15 @@ void FMAlgorithm::calculateInitialGains()
 			// move to the next node
 			++nodeIterator;
 		}
+
+		if ( _cellVector[ i ].block == 0 )
+		{
+			_aBucket->addCell( &_cellVector[ i ] );
+		}
+		else
+		{
+			_bBucket->addCell( &_cellVector[ i ] );
+		}
 	}
 }
 
@@ -209,7 +232,8 @@ void FMAlgorithm::populateCellandNetVectors()
 			_cellVector[ i ].block = 1;
 
 			// put it in the b partition
-			_partitionB.push_back( &_cellVector[ i ] );
+//			_partitionB.push_back( &_cellVector[ i ] );
+			++_partitionBSize;
 		}
 		else // partitionCounter <= a's threshold
 		{
@@ -217,7 +241,8 @@ void FMAlgorithm::populateCellandNetVectors()
 			_cellVector[ i ].block = 0;
 
 			// put it in the a partition
-			_partitionA.push_back( &_cellVector[ i ] );
+			++_partitionASize;
+//			_partitionA.push_back( &_cellVector[ i ] );
 		}
 
 		// get the cell number
@@ -283,6 +308,55 @@ void FMAlgorithm::calculateNetPartition(Net *net )
 	}
 }
 
+void FMAlgorithm::populateGainBuckets()
+{
+//	_aBucket = new GainBucket( _partitionA );
+//	_bBucket = new GainBucket( _partitionB );
+}
+
+void FMAlgorithm::calculatePartitions()
+{
+	printf("A Highest = %lu\n", _aBucket->maxGainCell() );
+	printf("B Highest = %lu\n", _bBucket->maxGainCell() );
+	std::size_t swapCell = 0;
+	GainBucket* swapBucket = nullptr;
+
+	swapCell	= _partitionASize > _partitionBSize ? _bBucket->maxGainCell() : _aBucket->maxGainCell();
+	swapBucket	= _partitionASize > _partitionBSize ? _bBucket : _aBucket;
+
+
+	swapBucket->print();
+	PrintSeparator;
+	swapBucket->removeHighestCellGain();
+	swapAndLockCellPartitions( &_cellVector[ swapCell ] );
+
+	printCellArray();
+	swapBucket->print();
+	printf("A Highest = %lu\n", _aBucket->maxGainCell() );
+	printf("B Highest = %lu\n", _bBucket->maxGainCell() );
+
+
+//	printf("pre cell %i ", _cellVector[ swapCell ].block );
+
+
+	//	printf("cell %lu block %i lock %i\n", swapCell, _cellVector[ swapCell ].block, _cellVector[ swapCell ].lock );
+}
+
+void FMAlgorithm::swapAndLockCellPartitions( FMAlgorithm::Cell* cell )
+{
+	if ( cell->block == 0 )
+	{
+		--_partitionASize;
+	}
+	else
+	{
+		--_partitionBSize;
+	}
+
+	cell->block = !cell->block;
+	cell->lock = true;
+}
+
 void FMAlgorithm::printCellArray() const
 {
 	printf("Gain\tBlock\tCell\tLock\tNets\n");
@@ -317,25 +391,25 @@ void FMAlgorithm::printNetArray() const
 
 void FMAlgorithm::printPartitions() const
 {
-	printf("PA\tGain\t\n");
-	for ( size_t i = 0; i < _partitionA.size(); ++i )
-	{
-		printf("%lu\t%i\t\n", _partitionA[ i ]->cellNumber, _partitionA[ i ]->gain );
-	}
+//	printf("PA\tGain\t\n");
+//	for ( size_t i = 0; i < _partitionA.size(); ++i )
+//	{
+//		printf("%lu\t%i\t\n", _partitionA[ i ]->cellNumber, _partitionA[ i ]->gain );
+//	}
 
-	PrintSeparator;
+//	PrintSeparator;
 
-	printf("PB\tGain\t\n");
-	for ( size_t i = 0; i < _partitionB.size(); ++i )
-	{
-		printf("%lu\t%i\t\n", _partitionB[ i ]->cellNumber, _partitionB[ i ]->gain );
-	}
+//	printf("PB\tGain\t\n");
+//	for ( size_t i = 0; i < _partitionB.size(); ++i )
+//	{
+//		printf("%lu\t%i\t\n", _partitionB[ i ]->cellNumber, _partitionB[ i ]->gain );
+//	}
 }
 
 void FMAlgorithm::sortParitions()
 {
-	bubbleSort( _partitionA );
-	bubbleSort( _partitionB );
+//	bubbleSort( _partitionA );
+//	bubbleSort( _partitionB );
 }
 
 void FMAlgorithm::calculateCost()

@@ -8,6 +8,7 @@
 #define MAX_NODES ( 25000 )
 
 class AdjacencyList;
+class GainBucket;
 
 /**
  * @brief	The FMAlgorithm class is based on C.M. Fiduccia and R.M. Mattheyses's paper
@@ -52,7 +53,7 @@ public:
 	 */
 	typedef Cell CellVector[ MAX_NODES ];
 	typedef std::vector< Net > NetVector;
-	typedef std::vector< Cell* > Partition;
+//	typedef std::vector< Cell* > Partition;
 
 public:
 
@@ -63,6 +64,8 @@ public:
 	 *			otherwise it will wait for execute to be called
 	 */
 	FMAlgorithm( const AdjacencyList* const adjacencyList, bool shouldExecute = false );
+
+	~FMAlgorithm();
 
 	/**
 	 * @brief execute executes the whole algorithm
@@ -110,12 +113,16 @@ public:
 
 private:
 
+	GainBucket* _aBucket;
+	GainBucket* _bBucket;
 	const AdjacencyList* const _adjacencyList;
 	CellVector _cellVector;
 	int _cost;
 	NetVector _netVector;
-	Partition _partitionA;
-	Partition _partitionB;
+	std::size_t _partitionASize;
+	std::size_t _partitionBSize;
+//	Partition _partitionA;
+//	Partition _partitionB;
 
 private:
 
@@ -145,6 +152,12 @@ private:
 	 * @param net to check
 	 */
 	inline void calculateNetPartition( Net* net );
+
+	inline void populateGainBuckets();
+
+	inline void calculatePartitions();
+
+	inline void swapAndLockCellPartitions( Cell* cell );
 };
 
 #endif // FMALGORITHM_H
