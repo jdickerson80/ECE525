@@ -4,69 +4,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MinGain ( -6 )
-#define MaxGain ( 6 )
+#define MinGain ( -12 )
+#define MaxGain ( 12 )
 #define Offset ( MaxGain )
 
+void GainBucket::printCellList( const GainBucket::CellList &list)
+{
+	GainBucket::CellList::const_iterator it = list.begin();
+
+	while ( it != list.end() )
+	{
+		printf( "%lu ", (*it)->cellNumber );
+		++it;
+	}
+}
+
 GainBucket::GainBucket()
+	: _maximumGain( 0 )
+	, _minimumGain( 0 )
 {
 	size_t size = ( MaxGain - MinGain ) + 1;
 
 	for ( size_t i = 0; i < size; ++i )
 	{
-		_bucket.push_back( IntList() );
+		_bucket.push_back( CellList() );
 	}
-
-//	printf("size = %lu\n", _bucket.size() );
 }
 
-//GainBucket::GainBucket( const FMAlgorithm::Partition& sortedPartition )
-//{
-//	int maxGain = sortedPartition[ 0 ]->gain;
-
-//	_minimumGain = static_cast< std::size_t >( sortedPartition[ sortedPartition.size() - 1 ]->gain * -1 );
-
-//	std::size_t delta = static_cast< std::size_t >( maxGain - sortedPartition[ sortedPartition.size() - 1 ]->gain ) + 1;
-//	_highestGain = delta - 1;
-
-//	for ( std::size_t i = 0; i < delta; ++i )
-//	{
-//		_bucket.push_back( IntList() );
-//	}
-
-//	printf("max %i min %d delta %i size %lu\n", maxGain, _minimumGain, Offset, _bucket.size() );
-//	for ( std::size_t i = 0; i < sortedPartition.size(); ++i )
-//	{
-////		printf("%i, ", sortedPartition[ i ]->gain + minGain );
-//		_bucket[ static_cast< std::size_t >( sortedPartition[ i ]->gain + (int)_minimumGain ) ].push_back( sortedPartition[ i ]->cellNumber );
-//	}
-
-////	for ( std::size_t i = 0; i < delta; ++i )
-////	{
-////		printList( _bucket[ i ] );
-////		printf("\n");
-//	//	}
-//}
-
-void GainBucket::addCell( const FMAlgorithm::Cell* const cell )
+void GainBucket::addCell( FMAlgorithm::Cell* cell )
 {
 	int gain = cell->gain;
 
-	if ( gain > _highestGain )
+	if ( gain > _maximumGain )
 	{
-		_highestGain = gain;
+		_maximumGain = gain;
 	}
 	else if ( gain < _minimumGain )
 	{
 		_minimumGain = gain;
 	}
 
-	_bucket[ Offset - gain ].push_back( cell->cellNumber );
+	_bucket[ Offset - gain ].push_back( cell );
 }
 
-std::size_t GainBucket::maxGainCell() const
+FMAlgorithm::Cell* GainBucket::maxGainCell() const
 {
-	return _bucket[ Offset - _highestGain ].front();
+	return _bucket[ Offset - _maximumGain ].front();
 }
 
 int GainBucket::minimumGain() const
@@ -74,30 +57,66 @@ int GainBucket::minimumGain() const
 	return _minimumGain;
 }
 
-bool GainBucket::removeHighestCellGain()
+FMAlgorithm::Cell* GainBucket::removeHighestCellGain()
 {
-	printf("high %i low %i\n", Offset - _highestGain, Offset - _minimumGain );
-	if ( _highestGain < _minimumGain )
+	if ( _maximumGain < _minimumGain )
 	{
-		return false;
+		return NULL;
 	}
 
-	_bucket[ Offset - _highestGain ].pop_front();
+	CellList::iterator nodeIterator;
+	CellList::const_iterator endIterator;
 
-	if ( _bucket[ Offset - _highestGain ].empty() )
+	for ( int i = _maximumGain; i >= MinGain; --i )
 	{
-		--_highestGain;
+		std::size_t index = static_cast< std::size_t >( Offset - i );
+
+		if ( _bucket[ index ].empty() )
+		{
+			continue;
+		}
+		nodeIterator = _bucket[ index ].begin();
+		endIterator = _bucket[ index ].end();
+
+		while ( nodeIterator != endIterator )
+		{
+			if ( !(*nodeIterator)->lock )
+			{
+				_bucket[ index ].erase( nodeIterator );
+				_maximumGain = i;
+				return (*nodeIterator);
+			}
+			++nodeIterator;
+		}
 	}
 
-	return true;
+	return NULL;
 }
 
 void GainBucket::print() const
 {
 	for ( std::size_t i = 0; i < _bucket.size(); ++i )
 	{
-		printf("%i\t", Offset - i );
-		printList( _bucket[ i ] );
+		if ( _bucket[ i ].empty() )
+		{
+			continue;
+		}
+
+		printf("%i\t", Offset - (int)i );
+		printCellList( _bucket[ i ] );
 		printf("\n");
+	}
+}
+
+bool GainBucket::isEmpty() const
+{
+	return _maximumGain < _minimumGain;
+}
+
+void GainBucket::emptyBucket()
+{
+	for ( std::size_t i = 0; i < _bucket.size(); ++i )
+	{
+		_bucket[ i ].clear();
 	}
 }

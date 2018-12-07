@@ -83,11 +83,6 @@ public:
 	void printNetArray() const;
 
 	/**
-	 * @brief printPartitions prints the partitions
-	 */
-	void printPartitions() const;
-
-	/**
 	 * @brief cost getter
 	 * @return cost
 	 */
@@ -137,11 +132,6 @@ private:
 	inline void calculateInitialGains();
 
 	/**
-	 * @brief sortParitions sorts the partitions in descending order
-	 */
-	inline void sortParitions();
-
-	/**
 	 * @brief populateCellandNetVectors fills the net and cell vectors
 	 * @todo break into smaller methods
 	 */
@@ -153,11 +143,13 @@ private:
 	 */
 	inline void calculateNetPartition( Net* net );
 
-	inline void populateGainBuckets();
+	inline void calculateCellGain( Cell* cell );
 
 	inline void calculatePartitions();
 
 	inline void swapAndLockCellPartitions( Cell* cell );
+
+	inline void initializeGainBuckets();
 };
 
 #endif // FMALGORITHM_H

@@ -9,35 +9,33 @@ class GainBucket
 {
 public:
 
-	typedef std::vector< IntList > Bucket;
+	typedef std::list< FMAlgorithm::Cell* > CellList;
+	typedef std::vector< CellList > Bucket;
 
 private:
 
 	Bucket _bucket;
+	int _maximumGain;
 	int _minimumGain;
-	int _highestGain;
 
+	static void printCellList( const CellList& list );
 public:
-
-	/**
-	 * @brief GainBucket
-	 * @param sortedPartition
-	 * @todo this cannot work like this to maintain O(N) complexity. This adds another loop through the partition, so
-	 *		it needs to be done WHILE creating the partitions. Just done like this because of the time crunch
-	 */
-//	GainBucket( const FMAlgorithm::Partition& sortedPartition );
 
 	GainBucket();
 
-	void addCell( const FMAlgorithm::Cell* const cell );
+	void addCell( FMAlgorithm::Cell* cell );
 
-	std::size_t maxGainCell() const;
+	FMAlgorithm::Cell* maxGainCell() const;
 
 	int minimumGain() const;
 
-	bool removeHighestCellGain();
+	FMAlgorithm::Cell* removeHighestCellGain();
 
 	void print() const;
+
+	bool isEmpty() const;
+
+	void emptyBucket();
 };
 
 #endif // GAINBUCKET_H
